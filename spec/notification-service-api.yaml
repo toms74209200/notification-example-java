@@ -1,0 +1,203 @@
+openapi: 3.0.3
+info:
+  title: Notification Service API
+  description: Main notification service that routes notifications to appropriate delivery channels
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /notifications/send:
+    post:
+      tags:
+        - notifications
+      summary: Send notification
+      description: Sends a notification via the appropriate channel (email, SMS, or push)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  required:
+                    - type
+                    - to
+                    - subject
+                    - body
+                  properties:
+                    type:
+                      type: string
+                      enum: [email]
+                    to:
+                      type: string
+                      format: email
+                      example: user@example.com
+                    subject:
+                      type: string
+                      example: "Welcome to our service"
+                    body:
+                      type: string
+                      example: "Thank you for signing up!"
+                    from:
+                      type: string
+                      format: email
+                      example: no-reply@example.com
+                - type: object
+                  required:
+                    - type
+                    - to
+                    - message
+                  properties:
+                    type:
+                      type: string
+                      enum: [sms]
+                    to:
+                      type: string
+                      example: "+819012345678"
+                    message:
+                      type: string
+                      example: "Your verification code is 123456"
+                    from:
+                      type: string
+                      example: "MyService"
+                - type: object
+                  required:
+                    - type
+                    - deviceToken
+                    - title
+                    - body
+                  properties:
+                    type:
+                      type: string
+                      enum: [push]
+                    deviceToken:
+                      type: string
+                      example: "dGhpcyBpcyBhIGZha2UgZGV2aWNlIHRva2Vu"
+                    title:
+                      type: string
+                      example: "New Message"
+                    body:
+                      type: string
+                      example: "You have a new message!"
+                    data:
+                      type: object
+                      example:
+                        action: "open_chat"
+                        chatId: "12345"
+      responses:
+        '200':
+          description: Notification sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "notification-123456789"
+                  type:
+                    type: string
+                    enum: [email, sms, push]
+                    example: "email"
+                  status:
+                    type: string
+                    enum: [sent, pending, failed]
+                    example: "sent"
+                  externalMessageId:
+                    type: string
+                    example: "email-123456789"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2024-01-15T10:30:00Z"
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid notification type"
+                  code:
+                    type: string
+                    example: "VALIDATION_ERROR"
+                  timestamp:
+                    type: string
+                    format: date-time
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "External service unavailable"
+                  code:
+                    type: string
+                    example: "EXTERNAL_SERVICE_ERROR"
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /notifications/{id}:
+    get:
+      tags:
+        - notifications
+      summary: Get notification status
+      description: Retrieves the status of a previously sent notification
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "notification-123456789"
+      responses:
+        '200':
+          description: Notification status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "notification-123456789"
+                  type:
+                    type: string
+                    enum: [email, sms, push]
+                    example: "email"
+                  status:
+                    type: string
+                    enum: [sent, pending, failed]
+                    example: "sent"
+                  externalMessageId:
+                    type: string
+                    example: "email-123456789"
+                  createdAt:
+                    type: string
+                    format: date-time
+                    example: "2024-01-15T10:30:00Z"
+                  updatedAt:
+                    type: string
+                    format: date-time
+                    example: "2024-01-15T10:30:05Z"
+        '404':
+          description: Notification not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Notification not found"
+                  code:
+                    type: string
+                    example: "NOT_FOUND"
