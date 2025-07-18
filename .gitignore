@@ -32,3 +32,5 @@ copilot-instructions.md
 .instructions/
 *mcp.json
 wampa*
+
+.devcontainer/devcontainer.local.json

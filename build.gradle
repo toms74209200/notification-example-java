@@ -3,6 +3,7 @@ plugins {
 	id 'org.springframework.boot' version '3.5.3'
 	id 'io.spring.dependency-management' version '1.1.7'
 	id 'com.diffplug.spotless' version '7.1.0'
+	id 'org.openapi.generator' version '7.2.0'
 }
 
 group = 'com.example'
@@ -20,12 +21,42 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+	implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+openApiGenerate {
+	generatorName = 'spring'
+	inputSpec = "$projectDir/spec/notification-service-api.yaml"
+	outputDir = "$projectDir/build/generated"
+	apiPackage = 'com.example.demo.api'
+	modelPackage = 'com.example.demo.model'
+	configOptions = [
+		interfaceOnly: 'true',
+		useSpringBoot3: 'true',
+		useBeanValidation: 'true',
+		performBeanValidation: 'true',
+		useTags: 'true',
+		dateLibrary: 'java8-localdatetime',
+		skipDefaultInterface: 'true'
+	]
+}
+
+compileJava.dependsOn tasks.openApiGenerate
+
+sourceSets {
+	main {
+		java {
+			srcDirs += ["$projectDir/build/generated/src/main/java"]
+		}
+	}
 }
 
 spotless {
